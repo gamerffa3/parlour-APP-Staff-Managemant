@@ -1,502 +1,593 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Salon Staff Management</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Salon Staff Management</title>
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
-  <style>
+<style>
 
-    *{
-      margin:0;
-      padding:0;
-      box-sizing:border-box;
-      font-family:Arial,sans-serif;
-    }
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,sans-serif;
+}
 
-    body{
-      background:#f3f4f6;
-      padding:15px;
-    }
+body{
+background:#f3f4f6;
+padding:15px;
+}
 
-    .container{
-      max-width:500px;
-      margin:auto;
-      padding-bottom:80px;
-    }
+.container{
+max-width:500px;
+margin:auto;
+padding-bottom:80px;
+}
 
-    .header{
-      background:linear-gradient(135deg,#111827,#1f2937);
-      color:white;
-      padding:25px;
-      border-radius:22px;
-      margin-bottom:20px;
-    }
+.header{
+background:linear-gradient(135deg,#111827,#1f2937);
+padding:25px;
+border-radius:25px;
+color:white;
+margin-bottom:20px;
+}
 
-    .header h1{
-      font-size:28px;
-      margin-bottom:5px;
-    }
+.header h1{
+font-size:28px;
+margin-bottom:5px;
+}
 
-    .header p{
-      color:#d1d5db;
-      font-size:14px;
-    }
+.header p{
+color:#d1d5db;
+font-size:14px;
+}
 
-    .card{
-      background:white;
-      padding:20px;
-      border-radius:22px;
-      margin-bottom:20px;
-      box-shadow:0 5px 15px rgba(0,0,0,0.08);
-    }
+.card{
+background:white;
+padding:20px;
+border-radius:22px;
+margin-bottom:20px;
+box-shadow:0 5px 15px rgba(0,0,0,0.08);
+}
 
-    .card h2{
-      margin-bottom:15px;
-      color:#111827;
-    }
+.card h2{
+margin-bottom:15px;
+color:#111827;
+}
 
-    input,select{
-      width:100%;
-      padding:15px;
-      border-radius:14px;
-      border:1px solid #d1d5db;
-      margin-bottom:12px;
-      background:#f9fafb;
-      font-size:15px;
-    }
+input,select{
+width:100%;
+padding:15px;
+border-radius:14px;
+border:1px solid #d1d5db;
+margin-bottom:12px;
+font-size:15px;
+background:#f9fafb;
+}
 
-    button{
-      width:100%;
-      padding:15px;
-      border:none;
-      border-radius:14px;
-      font-size:16px;
-      font-weight:bold;
-      cursor:pointer;
-    }
+button{
+width:100%;
+padding:15px;
+border:none;
+border-radius:14px;
+font-size:16px;
+font-weight:bold;
+cursor:pointer;
+}
 
-    .add-btn{
-      background:#2563eb;
-      color:white;
-    }
+.add-btn{
+background:#2563eb;
+color:white;
+}
 
-    .come-btn{
-      background:#16a34a;
-      color:white;
-      margin-top:12px;
-    }
+.come-btn{
+background:#16a34a;
+color:white;
+margin-top:12px;
+}
 
-    .staff-list{
-      display:flex;
-      flex-direction:column;
-      gap:15px;
-    }
+.delete-btn{
+background:#dc2626;
+color:white;
+margin-top:10px;
+}
 
-    .staff-card{
-      background:#f9fafb;
-      padding:16px;
-      border-radius:18px;
-      border-left:6px solid #2563eb;
-    }
+.staff-list{
+display:flex;
+flex-direction:column;
+gap:15px;
+}
 
-    .staff-card h3{
-      margin-bottom:8px;
-      color:#111827;
-    }
+.staff-card{
+background:#f9fafb;
+padding:16px;
+border-radius:18px;
+border-left:6px solid #2563eb;
+}
 
-    .staff-card p{
-      margin-bottom:5px;
-      color:#4b5563;
-      font-size:14px;
-    }
+.staff-card h3{
+margin-bottom:8px;
+color:#111827;
+}
 
-    .salary-box{
-      margin-top:12px;
-      background:#ecfdf5;
-      padding:12px;
-      border-radius:12px;
-      color:#065f46;
-      font-weight:bold;
-    }
+.staff-card p{
+margin-bottom:5px;
+font-size:14px;
+color:#4b5563;
+}
 
-  </style>
+.salary-box{
+margin-top:12px;
+background:#ecfdf5;
+padding:12px;
+border-radius:12px;
+color:#065f46;
+font-weight:bold;
+}
+
+.status{
+margin-top:10px;
+padding:10px;
+border-radius:10px;
+font-weight:bold;
+text-align:center;
+}
+
+.early{
+background:#dcfce7;
+color:#166534;
+}
+
+.late{
+background:#fee2e2;
+color:#991b1b;
+}
+
+.ontime{
+background:#e0f2fe;
+color:#075985;
+}
+
+</style>
 </head>
 <body>
 
 <div class="container">
 
-  <div class="header">
+<div class="header">
 
-    <h1>Salon Staff System</h1>
+<h1>Salon Staff System</h1>
 
-    <p>Attendance & Salary Management</p>
+<p>Realtime Attendance & Salary</p>
 
-  </div>
+</div>
 
-  <!-- ADD STAFF -->
+<!-- ADD STAFF -->
 
-  <div class="card">
+<div class="card">
 
-    <h2>Add Staff</h2>
+<h2>Add Staff</h2>
 
-    <input type="text" id="name" placeholder="Staff Name">
+<input type="text" id="name" placeholder="Staff Name">
 
-    <input type="number" id="salary" placeholder="Monthly Salary">
+<input type="number" id="salary" placeholder="Monthly Salary">
 
-    <input type="text" id="time" placeholder="Example: 9:00">
+<input type="text" id="time" placeholder="Example: 9:00">
 
-    <select id="ampm">
-      <option value="AM">AM</option>
-      <option value="PM">PM</option>
-    </select>
+<select id="ampm">
+<option value="AM">AM</option>
+<option value="PM">PM</option>
+</select>
 
-    <select id="holiday">
-      <option value="Sunday">Sunday Holiday</option>
-      <option value="Monday">Monday Holiday</option>
-      <option value="Tuesday">Tuesday Holiday</option>
-      <option value="Wednesday">Wednesday Holiday</option>
-      <option value="Thursday">Thursday Holiday</option>
-      <option value="Friday">Friday Holiday</option>
-      <option value="Saturday">Saturday Holiday</option>
-    </select>
+<select id="holiday">
+<option value="Sunday">Sunday Holiday</option>
+<option value="Monday">Monday Holiday</option>
+<option value="Tuesday">Tuesday Holiday</option>
+<option value="Wednesday">Wednesday Holiday</option>
+<option value="Thursday">Thursday Holiday</option>
+<option value="Friday">Friday Holiday</option>
+<option value="Saturday">Saturday Holiday</option>
+</select>
 
-    <button class="add-btn" onclick="addStaff()">
-      Add Staff
-    </button>
+<button class="add-btn" onclick="addStaff()">
+Add Staff
+</button>
 
-  </div>
+</div>
 
-  <!-- STAFF LIST -->
+<!-- STAFF LIST -->
 
-  <div class="card">
+<div class="card">
 
-    <h2>All Staff</h2>
+<h2>All Staff</h2>
 
-    <div class="staff-list" id="staffList"></div>
+<div class="staff-list" id="staffList"></div>
 
-  </div>
+</div>
 
 </div>
 
 <script>
 
-  // FIREBASE CONFIG
+const firebaseConfig = {
 
-  const firebaseConfig = {
+apiKey: "AIzaSyBwkeBZilmVGP_kwlrgq9EknQkBKJd4EjY",
 
-    apiKey: "AIzaSyBwkeBZilmVGP_kwlrgq9EknQkBKJd4EjY",
+authDomain: "staff-managemant-db65c.firebaseapp.com",
 
-    authDomain: "staff-managemant-db65c.firebaseapp.com",
+projectId: "staff-managemant-db65c",
 
-    projectId: "staff-managemant-db65c",
+storageBucket: "staff-managemant-db65c.firebasestorage.app",
 
-    storageBucket: "staff-managemant-db65c.firebasestorage.app",
+messagingSenderId: "46075713632",
 
-    messagingSenderId: "46075713632",
+appId: "1:46075713632:web:8af66a96598fae1c5b0b05",
 
-    appId: "1:46075713632:web:8af66a96598fae1c5b0b05",
+measurementId: "G-R4XZ85FR3M"
 
-    measurementId: "G-R4XZ85FR3M"
+};
 
-  };
+firebase.initializeApp(firebaseConfig);
 
-  firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-  const db = firebase.firestore();
 
-  // ADD STAFF
+// ADD STAFF
 
-  async function addStaff(){
+async function addStaff(){
 
-    const name =
-    document.getElementById("name").value;
+const name =
+document.getElementById("name").value.trim();
 
-    const salary =
-    document.getElementById("salary").value;
+const salary =
+document.getElementById("salary").value.trim();
 
-    const time =
-    document.getElementById("time").value;
+const time =
+document.getElementById("time").value.trim();
 
-    const ampm =
-    document.getElementById("ampm").value;
+const ampm =
+document.getElementById("ampm").value;
 
-    const holiday =
-    document.getElementById("holiday").value;
+const holiday =
+document.getElementById("holiday").value;
 
-    // VALIDATION
+if(name === "" || salary === "" || time === ""){
 
-    if(
-      name.trim() === "" ||
-      salary.trim() === "" ||
-      time.trim() === ""
-    ){
+alert("Please fill all fields");
 
-      alert("Please fill all fields");
+return;
 
-      return;
+}
 
-    }
+try{
 
-    try{
+await db.collection("staff").add({
 
-      await db.collection("staff").add({
+name:name,
 
-        name:name,
+salary:parseInt(salary),
 
-        salary:parseInt(salary),
+shiftTime:time,
 
-        shiftTime:time,
+ampm:ampm,
 
-        ampm:ampm,
+holiday:holiday,
 
-        holiday:holiday,
+totalBonus:0,
 
-        totalBonus:0,
+totalPenalty:0,
 
-        totalPenalty:0,
+finalSalary:parseInt(salary),
 
-        finalSalary:parseInt(salary),
+todayStatus:"Not Marked",
 
-        createdAt:
-        firebase.firestore.FieldValue.serverTimestamp()
+createdAt:
+firebase.firestore.FieldValue.serverTimestamp()
 
-      });
+});
 
-      alert("Staff Added Successfully");
+alert("Staff Added Successfully");
 
-      document.getElementById("name").value = "";
+document.getElementById("name").value = "";
+document.getElementById("salary").value = "";
+document.getElementById("time").value = "";
 
-      document.getElementById("salary").value = "";
+}
 
-      document.getElementById("time").value = "";
+catch(error){
 
-    }
+alert(error.message);
 
-    catch(error){
+}
 
-      alert(error.message);
+}
 
-    }
 
-  }
+// COME IN SALON
 
-  // COME IN SALON
+async function comeInSalon(staffId){
 
-  async function comeInSalon(staffId){
+const now = new Date();
 
-    const now = new Date();
+const today =
+now.toLocaleDateString();
 
-    const today =
-    now.toLocaleDateString();
+const attendanceCheck =
+await db.collection("attendance")
+.where("staffId","==",staffId)
+.where("date","==",today)
+.get();
 
-    // CHECK ATTENDANCE
+if(!attendanceCheck.empty){
 
-    const attendanceRef =
-    await db.collection("attendance")
-    .where("staffId","==",staffId)
-    .where("date","==",today)
-    .get();
+alert("Attendance Already Marked");
 
-    if(!attendanceRef.empty){
+return;
 
-      alert("Attendance Already Done");
+}
 
-      return;
+const staffDoc =
+await db.collection("staff")
+.doc(staffId)
+.get();
 
-    }
+const staff = staffDoc.data();
 
-    // GET STAFF
+const currentDay =
+now.toLocaleDateString('en-US',{weekday:'long'});
 
-    const staffDoc =
-    await db.collection("staff")
-    .doc(staffId)
-    .get();
+if(currentDay === staff.holiday){
 
-    const staff = staffDoc.data();
+alert("Today is Holiday");
 
-    let currentHour =
-    now.getHours();
+return;
 
-    let currentMinute =
-    now.getMinutes();
+}
 
-    // SHIFT TIME
+let currentHour = now.getHours();
 
-    let shift =
-    staff.shiftTime.split(":");
+let currentMinute = now.getMinutes();
 
-    let shiftHour =
-    parseInt(shift[0]);
+let shift =
+staff.shiftTime.split(":");
 
-    let shiftMinute =
-    parseInt(shift[1]);
+let shiftHour =
+parseInt(shift[0]);
 
-    // PM CONVERT
+let shiftMinute =
+parseInt(shift[1]);
 
-    if(
-      staff.ampm === "PM" &&
-      shiftHour < 12
-    ){
+if(
+staff.ampm === "PM" &&
+shiftHour < 12
+){
 
-      shiftHour += 12;
+shiftHour += 12;
 
-    }
+}
 
-    // BONUS & PENALTY
+let status = "On Time";
 
-    let status = "On Time";
+let bonus = 0;
 
-    let bonus = 0;
+let penalty = 0;
 
-    let penalty = 0;
 
-    // EARLY BONUS
+// EARLY
 
-    if(currentHour < shiftHour){
+if(currentHour < shiftHour){
 
-      status = "Early";
+status = "Early";
 
-      bonus = 20;
+bonus = 20;
 
-    }
+}
 
-    // LATE PENALTY
 
-    if(
-      currentHour > shiftHour ||
-      (
-        currentHour === shiftHour &&
-        currentMinute > shiftMinute + 10
-      )
-    ){
+// LATE
 
-      status = "Late";
+if(
+currentHour > shiftHour ||
 
-      penalty = 20;
+(
+currentHour === shiftHour &&
+currentMinute > shiftMinute + 10
+)
 
-    }
+){
 
-    // FINAL SALARY
+status = "Late";
 
-    let finalSalary =
+penalty = 20;
 
-      parseInt(
-        staff.finalSalary ||
-        staff.salary
-      )
+}
 
-      + bonus
 
-      - penalty;
+// FINAL SALARY
 
-    // SAVE ATTENDANCE
+let finalSalary =
 
-    await db.collection("attendance").add({
+parseInt(
+staff.finalSalary ||
+staff.salary
+)
 
-      staffId:staffId,
++ bonus
 
-      staffName:staff.name,
+- penalty;
 
-      status:status,
 
-      bonus:bonus,
+// SAVE ATTENDANCE
 
-      penalty:penalty,
+await db.collection("attendance").add({
 
-      date:today,
+staffId:staffId,
 
-      checkIn:
-      firebase.firestore.FieldValue.serverTimestamp()
+staffName:staff.name,
 
-    });
+status:status,
 
-    // UPDATE STAFF
+bonus:bonus,
 
-    await db.collection("staff")
-    .doc(staffId)
-    .update({
+penalty:penalty,
 
-      totalBonus:
-      (staff.totalBonus || 0)
-      + bonus,
+date:today,
 
-      totalPenalty:
-      (staff.totalPenalty || 0)
-      + penalty,
+time:
+now.toLocaleTimeString(),
 
-      finalSalary:finalSalary
+createdAt:
+firebase.firestore.FieldValue.serverTimestamp()
 
-    });
+});
 
-    alert(
-      "Attendance Success\n\n" +
-      "Status: " + status
-    );
 
-  }
+// UPDATE STAFF
 
-  // LOAD STAFF REALTIME
+await db.collection("staff")
+.doc(staffId)
+.update({
 
-  db.collection("staff")
-  .onSnapshot((snapshot)=>{
+totalBonus:
+(staff.totalBonus || 0)
++ bonus,
 
-    const staffList =
-    document.getElementById("staffList");
+totalPenalty:
+(staff.totalPenalty || 0)
++ penalty,
 
-    staffList.innerHTML = "";
+finalSalary:finalSalary,
 
-    snapshot.forEach((doc)=>{
+todayStatus:status
 
-      const staff = doc.data();
+});
 
-      staffList.innerHTML += `
+alert(
+"Attendance Success\n\n" +
+"Status: " + status
+);
 
-        <div class="staff-card">
+}
 
-          <h3>${staff.name}</h3>
 
-          <p>
-            <b>Salary:</b>
-            ₹${staff.salary}
-          </p>
+// DELETE STAFF
 
-          <p>
-            <b>Shift:</b>
-            ${staff.shiftTime}
-            ${staff.ampm}
-          </p>
+async function deleteStaff(id){
 
-          <p>
-            <b>Holiday:</b>
-            ${staff.holiday}
-          </p>
+const confirmDelete =
+confirm("Delete Staff?");
 
-          <div class="salary-box">
+if(!confirmDelete) return;
 
-            Final Salary:
-            ₹${staff.finalSalary}
+await db.collection("staff")
+.doc(id)
+.delete();
 
-          </div>
+alert("Staff Deleted");
 
-          <button
-            class="come-btn"
-            onclick="comeInSalon('${doc.id}')"
-          >
-            Come In Salon
-          </button>
+}
 
-        </div>
 
-      `;
+// LOAD STAFF
 
-    })
+db.collection("staff")
+.orderBy("createdAt","desc")
+.onSnapshot((snapshot)=>{
 
-  })
+const staffList =
+document.getElementById("staffList");
+
+staffList.innerHTML = "";
+
+snapshot.forEach((doc)=>{
+
+const staff = doc.data();
+
+let statusClass = "ontime";
+
+if(staff.todayStatus === "Early"){
+statusClass = "early";
+}
+
+if(staff.todayStatus === "Late"){
+statusClass = "late";
+}
+
+staffList.innerHTML += `
+
+<div class="staff-card">
+
+<h3>${staff.name}</h3>
+
+<p>
+<b>Salary:</b>
+₹${staff.salary}
+</p>
+
+<p>
+<b>Shift:</b>
+${staff.shiftTime}
+${staff.ampm}
+</p>
+
+<p>
+<b>Holiday:</b>
+${staff.holiday}
+</p>
+
+<p>
+<b>Bonus:</b>
+₹${staff.totalBonus || 0}
+</p>
+
+<p>
+<b>Penalty:</b>
+₹${staff.totalPenalty || 0}
+</p>
+
+<div class="salary-box">
+
+Final Salary:
+₹${staff.finalSalary}
+
+</div>
+
+<div class="status ${statusClass}">
+
+${staff.todayStatus}
+
+</div>
+
+<button
+class="come-btn"
+onclick="comeInSalon('${doc.id}')"
+>
+
+Come In Salon
+
+</button>
+
+<button
+class="delete-btn"
+onclick="deleteStaff('${doc.id}')"
+>
+
+Delete Staff
+
+</button>
+
+</div>
+
+`;
+
+})
+
+})
 
 </script>
 
