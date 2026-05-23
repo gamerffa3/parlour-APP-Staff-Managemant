@@ -1,1 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Salon Admin Panel</title>
 
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+  <style>
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:Arial,sans-serif;
+    }
+
+    body{
+      background:#f3f4f6;
+      padding:15px;
+    }
+
+    .container{
+      max-width:500px;
+      margin:auto;
+      padding-bottom:80px;
+    }
+
+    .header{
+      background:linear-gradient(135deg,#111827,#1f2937);
+      padding:25px;
+      border-radius:22px;
+      color:white;
+      margin-bottom:20px;
+    }
+
+    .header h1{
+      font-size:28px;
+      margin-bottom:5px;
+    }
+
+    .header p{
+      color:#d1d5db;
+      font-size:14px;
+    }
+
+    .top-btn{
+      margin-top:18px;
+    }
+
+    .top-btn button{
+      width:100%;
+      padding:15px;
+      border:none;
+      border-radius:14px;
+      background:#2563eb;
+      color:white;
+      font-size:16px;
+      font-weight:bold;
+      cursor:pointer;
+    }
+
+    .card{
+      background:white;
+      border-radius:22px;
+      padding:20px;
+      margin-top:20px;
+      box-shadow:0 5px 15px rgba(0,0,0,0.08);
+    }
+
+    .card h2{
+      margin-bottom:15px;
+      color:#111827;
+    }
+
+    input,select{
+      width:100%;
+      padding:15px;
+      border-radius:12px;
+      border:1px solid #d1d5db;
+      margin-bottom:12px;
+      background:#f9fafb;
+    }
+
+    button{
+      width:100%;
+      padding:15px;
+      border:none;
+      border-radius:14px;
+      font-weight:bold;
+      cursor:pointer;
+    }
+
+    .save-btn{
+      background:#16a34a;
+      color:white;
+    }
+
+    .code-btn{
+      background:#111827;
+      color:white;
+    }
+
+    .code-box{
+      background:#111827;
+      color:white;
+      padding:30px;
+      border-radius:18px;
+      text-align:center;
+      margin-top:15px;
+    }
+
+    .code-box h1{
+      font-size:50px;
+      letter-spacing:10px;
+    }
+
+    .staff-list{
+      display:flex;
+      flex-direction:column;
+      gap:15px;
+    }
+
+    .staff-card{
+      background:#f9fafb;
+      padding:16px;
+      border-radius:18px;
+      border-left:5px solid #2563eb;
+    }
+
+    .staff-card h3{
+      margin-bottom:10px;
+      color:#111827;
+    }
+
+    .staff-card p{
+      margin-bottom:5px;
+      color:#4b5563;
+      font-size:14px;
+    }
+
+    .salary{
+      margin-top:10px;
+      background:#ecfdf5;
+      padding:10px;
+      border-radius:12px;
+      color:#065f46;
+      font-weight:bold;
+    }
+
+    #staffForm{
+      display:none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="header">
+    <h1>Salon Admin</h1>
+    <p>Attendance & Salary Management</p>
+
+    <div class="top-btn">
+      <button onclick="toggleForm()">+ Add Staff</button>
+    </div>
+  </div>
+
+  <div class="card" id="staffForm">
+    <h2>Add Staff</h2>
+
+    <input type="text" id="name" placeholder="Staff Name">
+
+    <input type="number" id="salary" placeholder="Monthly Salary">
+
+    <input type="time" id="time">
+
+    <select id="holiday">
+      <option value="Sunday">Sunday Holiday</option>
+      <option value="Monday">Monday Holiday</option>
+      <option value="Tuesday">Tuesday Holiday</option>
+      <option value="Wednesday">Wednesday Holiday</option>
+      <option value="Thursday">Thursday Holiday</option>
+      <option value="Friday">Friday Holiday</option>
+      <option value="Saturday">Saturday Holiday</option>
+    </select>
+
+    <button class="save-btn" onclick="addStaff()">Save Staff</button>
+  </div>
+
+  <div class="card">
+    <h2>Generate Attendance Code</h2>
+
+    <button class="code-btn" onclick="generateCode()">
+      Generate Live Code
+    </button>
+
+    <div class="code-box">
+      <h1 id="liveCode">----</h1>
+      <p>Auto Expire in 30 seconds</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>All Staff</h2>
+
+    <div class="staff-list" id="staffList"></div>
+  </div>
+
+</div>
+
+<script>
+
+  // Firebase Config
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_MESSAGING_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+
+  const db = firebase.firestore();
+
+  function toggleForm(){
+    const form = document.getElementById('staffForm');
+
+    if(form.style.display === 'block'){
+      form.style.display = 'none';
+    } else {
+      form.style.display = 'block';
+    }
+  }
+
+  // Add Staff
+  function addStaff(){
+
+    const name = document.getElementById('name').value;
+    const salary = document.getElementById('salary').value;
+    const time = document.getElementById('time').value;
+    const holiday = document.getElementById('holiday').value;
+
+    if(!name || !salary || !time){
+      alert('Fill all fields');
+      return;
+    }
+
+    db.collection('staff').add({
+      name:name,
+      salary:salary,
+      shiftTime:time,
+      holiday:holiday,
+      bonus:0,
+      penalty:0,
+      finalSalary:salary,
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    })
+    .then(()=>{
+      alert('Staff Added');
+
+      document.getElementById('name').value='';
+      document.getElementById('salary').value='';
+      document.getElementById('time').value='';
+    })
+  }
+
+  // Generate Attendance Code
+  function generateCode(){
+
+    const code = Math.floor(1000 + Math.random() * 9000);
+
+    document.getElementById('liveCode').innerText = code;
+
+    db.collection('attendanceCode').doc('live').set({
+      code:code,
+      createdAt:firebase.firestore.FieldValue.serverTimestamp(),
+      expires:30
+    });
+
+    setTimeout(()=>{
+      document.getElementById('liveCode').innerText='----';
+    },30000);
+  }
+
+  // Load Staff Realtime
+  db.collection('staff').onSnapshot((snapshot)=>{
+
+    const staffList = document.getElementById('staffList');
+
+    staffList.innerHTML='';
+
+    snapshot.forEach((doc)=>{
+
+      const staff = doc.data();
+
+      staffList.innerHTML += `
+
+        <div class="staff-card">
+          <h3>${staff.name}</h3>
+
+          <p><b>Salary:</b> ₹${staff.salary}</p>
+
+          <p><b>Daily Time:</b> ${staff.shiftTime}</p>
+
+          <p><b>Holiday:</b> ${staff.holiday}</p>
+
+          <div class="salary">
+            Final Salary: ₹${staff.finalSalary}
+          </div>
+        </div>
+
+      `;
+
+    })
+
+  })
+
+</script>
+
+</body>
+</html>
+```
+
+---
+
+# staff.html (Staff Panel)
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Staff Panel</title>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+  <style>
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:Arial,sans-serif;
+    }
+
+    body{
+      background:#f3f4f6;
+      padding:15px;
+    }
+
+    .container{
+      max-width:500px;
+      margin:auto;
+    }
+
+    .header{
+      background:linear-gradient(135deg,#111827,#1f2937);
+      color:white;
+      padding:25px;
+      border-radius:22px;
+      margin-bottom:20px;
+    }
+
+    .header h1{
+      font-size:28px;
+      margin-bottom:5px;
+    }
+
+    .card{
+      background:white;
+      padding:20px;
+      border-radius:22px;
+      margin-bottom:20px;
+      box-shadow:0 5px 15px rgba(0,0,0,0.08);
+    }
+
+    select,input{
+      width:100%;
+      padding:15px;
+      border-radius:12px;
+      border:1px solid #d1d5db;
+      margin-bottom:12px;
+      background:#f9fafb;
+    }
+
+    button{
+      width:100%;
+      padding:15px;
+      border:none;
+      border-radius:14px;
+      background:#2563eb;
+      color:white;
+      font-weight:bold;
+      cursor:pointer;
+    }
+
+    .status{
+      margin-top:15px;
+      padding:15px;
+      border-radius:12px;
+      text-align:center;
+      font-weight:bold;
+      background:#ecfdf5;
+      color:#065f46;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="header">
+    <h1>Staff Panel</h1>
+    <p>Attendance Verification</p>
+  </div>
+
+  <div class="card">
+
+    <select id="staffSelect">
+      <option value="">Select Staff</option>
+    </select>
+
+    <input type="number" id="code" placeholder="Enter 4 Digit Code">
+
+    <button onclick="verifyAttendance()">
+      I Am In Salon
+    </button>
+
+    <div class="status" id="status">
+      Waiting For Attendance
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+  // Firebase Config
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_MESSAGING_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+
+  const db = firebase.firestore();
+
+  // Load Staff
+  db.collection('staff').onSnapshot((snapshot)=>{
+
+    const select = document.getElementById('staffSelect');
+
+    select.innerHTML = '<option value="">Select Staff</option>';
+
+    snapshot.forEach((doc)=>{
+
+      const staff = doc.data();
+
+      select.innerHTML += `
+        <option value="${doc.id}">
+          ${staff.name}
+        </option>
+      `;
+
+    })
+
+  })
+
+  // Verify Attendance
+  async function verifyAttendance(){
+
+    const staffId = document.getElementById('staffSelect').value;
+    const enteredCode = document.getElementById('code').value;
+
+    if(!staffId || !enteredCode){
+      alert('Fill all fields');
+      return;
+    }
+
+    const codeDoc = await db.collection('attendanceCode').doc('live').get();
+
+    const liveCode = codeDoc.data().code;
+
+    if(enteredCode == liveCode){
+
+      const now = new Date();
+
+      const hour = now.getHours();
+      const minute = now.getMinutes();
+
+      let status = 'On Time';
+      let bonus = 0;
+      let penalty = 0;
+
+      // Example timing logic
+      if(hour < 10){
+        status = 'Early';
+        bonus = 20;
+      }
+
+      if(hour == 10 && minute > 10){
+        status = 'Late';
+        penalty = 20;
+      }
+
+      await db.collection('attendance').add({
+        staffId:staffId,
+        checkIn:firebase.firestore.FieldValue.serverTimestamp(),
+        status:status,
+        bonus:bonus,
+        penalty:penalty
+      })
+
+      document.getElementById('status').innerHTML = `
+        Attendance Success<br><br>
+        Status: ${status}
+      `;
+
+    } else {
+
+      document.getElementById('status').innerHTML = 'Invalid Code';
+
+    }
+
+  }
+
+</script>
+
+</body>
+</html>
