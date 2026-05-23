@@ -3,78 +3,75 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Staff App</title>
+<title>Staff Attendance</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <style>
-body{
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
 font-family:Arial;
+}
+
+body{
 background:#f3f4f6;
 padding:15px;
 }
+
+.container{
+max-width:600px;
+margin:auto;
+}
+
 .card{
 background:white;
 padding:20px;
 border-radius:20px;
 margin-bottom:20px;
+box-shadow:0 5px 15px rgba(0,0,0,0.08);
 }
+
+.staff-card{
+background:#f9fafb;
+padding:15px;
+border-radius:16px;
+margin-top:15px;
+border-left:5px solid #16a34a;
+}
+
 input,button{
 width:100%;
-padding:15px;
-margin-top:10px;
+padding:14px;
 border-radius:12px;
-border:1px solid #ccc;
+border:1px solid #ddd;
+margin-top:10px;
+font-size:15px;
 }
+
 button{
 background:#16a34a;
 color:white;
 border:none;
 font-weight:bold;
 }
-.staff{
-background:#f9fafb;
-padding:15px;
-border-radius:15px;
-margin-top:15px;
+
+.done{
+background:#9ca3af;
 }
+
 </style>
 </head>
 <body>
 
+<div class="container">
+
 <div class="card">
-<h2>Staff Attendance</h2>
-<p>Select your name and enter admin code.</p>
+<h1>Staff Attendance</h1>
+<p>Enter admin code to verify attendance.</p>
 </div>
 
 <div id="staffList"></div>
-
-<script>
-
-const firebaseConfig = {
-apiKey: "AIzaSyBwkeBZilmVGP_kwlrgq9EknQkBKJd4EjY",
-authDomain: "staff-managemant-db65c.firebaseapp.com",
-projectId: "staff-managemant-db65c",
-storageBucket: "staff-managemant-db65c.firebasestorage.app",
-messagingSenderId: "46075713632",
-appId: "1:46075713632:web:8af66a96598fae1c5b0b05"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-function distance(lat1, lon1, lat2, lon2){
-const R = 6371e3;
-const p1 = lat1 * Math.PI/180;
-const p2 = lat2 * Math.PI/180;
-const dp = (lat2-lat1) * Math.PI/180;
-const dl = (lon2-lon1) * Math.PI/180;
-const a = Math.sin(dp/2)*Math.sin(dp/2)+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)*Math.sin(dl/2);
-const c = 2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-return R*c;
-}
-
-async function verifyAttendance(id){
-
-</html>
+<p><
