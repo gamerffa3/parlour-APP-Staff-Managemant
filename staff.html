@@ -1,1 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Staff Panel</title>
 
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,sans-serif;
+}
+
+body{
+background:#f3f4f6;
+padding:15px;
+}
+
+.container{
+max-width:500px;
+margin:auto;
+padding-bottom:80px;
+}
+
+.header{
+background:linear-gradient(135deg,#2563eb,#1d4ed8);
+padding:25px;
+border-radius:25px;
+color:white;
+margin-bottom:20px;
+}
+
+.header h1{
+font-size:28px;
+margin-bottom:5px;
+}
+
+.header p{
+font-size:14px;
+color:#dbeafe;
+}
+
+.staff-list{
+display:flex;
+flex-direction:column;
+gap:15px;
+}
+
+.staff-card{
+background:white;
+padding:20px;
+border-radius:22px;
+box-shadow:0 5px 15px rgba(0,0,0,0.08);
+}
+
+.staff-card h2{
+margin-bottom:10px;
+color:#111827;
+}
+
+.staff-card p{
+margin-bottom:7px;
+color:#4b5563;
+font-size:14px;
+}
+
+.salary-box{
+margin-top:12px;
+padding:12px;
+border-radius:12px;
+background:#ecfdf5;
+color:#065f46;
+font-weight:bold;
+}
+
+.status{
+margin-top:12px;
+padding:10px;
+border-radius:12px;
+font-weight:bold;
+text-align:center;
+}
+
+.early{
+background:#dcfce7;
+color:#166534;
+}
+
+.late{
+background:#fee2e2;
+color:#991b1b;
+}
+
+.ontime{
+background:#e0f2fe;
+color:#075985;
+}
+
+.come-btn{
+width:100%;
+padding:15px;
+margin-top:15px;
+border:none;
+border-radius:14px;
+background:#16a34a;
+color:white;
+font-size:16px;
+font-weight:bold;
+cursor:pointer;
+}
+
+.done-btn{
+background:#9ca3af;
+}
+
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<div class="header">
+
+<h1>Staff Panel</h1>
+
+<p>Attendance & Salary Status</p>
+
+</div>
+
+<div class="staff-list" id="staffList"></div>
+
+</div>
+
+<script>
+
+const firebaseConfig = {
+
+apiKey: "AIzaSyBwkeBZilmVGP_kwlrgq9EknQkBKJd4EjY",
+
+authDomain: "staff-managemant-db65c.firebaseapp.com",
+
+projectId: "staff-managemant-db65c",
+
+storageBucket: "staff-managemant-db65c.firebasestorage.app",
+
+messagingSenderId: "46075713632",
+
+appId: "1:46075713632:web:8af66a96598fae1c5b0b05",
+
+measurementId: "G-R4XZ85FR3M"
+
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const db = firebase.firestore();
+
+
+// STAFF ATTENDANCE
+
+async function markAttendance(staffId){
+
+const now = new Date();
+
+const today =
+now.toLocaleDateString();
+
+
+// CHECK ALREADY MARKED
+
+const attendanceCheck =
+await db.collection("attendance")
+.where("staffId","==",staffId)
+.where("date","==",today)
+.get();
+
+if(!attendanceCheck.empty){
+
+alert("Attendance Already Marked");
+
+return;
+
+}
+
+
+// GET STAFF
+
+const staffDoc =
+await db.collection("staff")
+.doc(staffId)
+.get();
+
+const staff = staffDoc.data();
+
+
+// HOLIDAY CHECK
+
+const currentDay =
+now.toLocaleDateString(
+'en-US',
+{weekday:'long'}
+);
+
+if(currentDay === staff.holiday){
+
+alert("Today is Holiday");
+
+return;
+
+}
+
+
+// CURRENT TIME
+
+let currentHour =
+now.getHours();
+
+let currentMinute =
+now.getMinutes();
+
+
+// SHIFT TIME
+
+let shift =
+staff.shiftTime.split(":");
+
+let shiftHour =
+parseInt(shift[0]);
+
+let shiftMinute =
+parseInt(shift[1]);
+
+
+// PM
+
+if(
+staff.ampm === "PM" &&
+shiftHour < 12
+){
+
+shiftHour += 12;
+
+}
+
+
+// STATUS
+
+let status = "On Time";
+
+let bonus = 0;
+
+let penalty = 0;
+
+
+// EARLY BONUS
+
+if(currentHour < shiftHour){
+
+status = "Early";
+
+bonus = 20;
+
+}
+
+
+// LATE PENALTY
+
+if(
+
+currentHour > shiftHour ||
+
+(
+
+currentHour === shiftHour &&
+currentMinute > shiftMinute + 10
+
+)
+
+){
+
+status = "Late";
+
+penalty = 20;
+
+}
+
+
+// FINAL SALARY
+
+let finalSalary =
+
+parseInt(
+staff.finalSalary ||
+staff.salary
+)
+
++ bonus
+
+- penalty;
+
+
+// SAVE ATTENDANCE
+
+await db.collection("attendance").add({
+
+staffId:staffId,
+
+staffName:staff.name,
+
+status:status,
+
+bonus:bonus,
+
+penalty:penalty,
+
+date:today,
+
+time:
+now.toLocaleTimeString(),
+
+createdAt:
+firebase.firestore.FieldValue.serverTimestamp()
+
+});
+
+
+// UPDATE STAFF
+
+await db.collection("staff")
+.doc(staffId)
+.update({
+
+totalBonus:
+(staff.totalBonus || 0)
++ bonus,
+
+totalPenalty:
+(staff.totalPenalty || 0)
++ penalty,
+
+finalSalary:finalSalary,
+
+todayStatus:status
+
+});
+
+alert(
+"Attendance Success\n\n" +
+"Status: " + status
+);
+
+}
+
+
+// LOAD STAFF
+
+db.collection("staff")
+.orderBy("createdAt","desc")
+.onSnapshot(async(snapshot)=>{
+
+const staffList =
+document.getElementById("staffList");
+
+staffList.innerHTML = "";
+
+const today =
+new Date().toLocaleDateString();
+
+for(const doc of snapshot.docs){
+
+const staff = doc.data();
+
+
+// CHECK TODAY ATTENDANCE
+
+const attendanceCheck =
+await db.collection("attendance")
+.where("staffId","==",doc.id)
+.where("date","==",today)
+.get();
+
+let alreadyMarked =
+!attendanceCheck.empty;
+
+let statusClass = "ontime";
+
+if(staff.todayStatus === "Early"){
+statusClass = "early";
+}
+
+if(staff.todayStatus === "Late"){
+statusClass = "late";
+}
+
+staffList.innerHTML += `
+
+<div class="staff-card">
+
+<h2>${staff.name}</h2>
+
+<p>
+<b>Monthly Salary:</b>
+₹${staff.salary}
+</p>
+
+<p>
+<b>Final Salary:</b>
+₹${staff.finalSalary}
+</p>
+
+<p>
+<b>Bonus:</b>
+₹${staff.totalBonus || 0}
+</p>
+
+<p>
+<b>Penalty:</b>
+₹${staff.totalPenalty || 0}
+</p>
+
+<p>
+<b>Shift Time:</b>
+${staff.shiftTime}
+${staff.ampm}
+</p>
+
+<p>
+<b>Holiday:</b>
+${staff.holiday}
+</p>
+
+<div class="salary-box">
+
+Current Salary:
+₹${staff.finalSalary}
+
+</div>
+
+<div class="status ${statusClass}">
+
+${staff.todayStatus}
+
+</div>
+
+<button
+
+class="
+${alreadyMarked ? 'come-btn done-btn' : 'come-btn'}
+"
+
+${alreadyMarked ? 'disabled' : ''}
+
+onclick="markAttendance('${doc.id}')"
+
+>
+
+${alreadyMarked ? 'Attendance Done' : 'Come In Salon'}
+
+</button>
+
+</div>
+
+`;
+
+}
+
+})
+
+</script>
+
+</body>
+</html>
