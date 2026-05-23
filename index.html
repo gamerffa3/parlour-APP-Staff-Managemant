@@ -1,595 +1,423 @@
+# index.html (Admin App)
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Salon Staff Management</title>
+<title>Salon Admin Panel</title>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <style>
-
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Arial,sans-serif;
-}
-
 body{
+font-family:Arial;
 background:#f3f4f6;
 padding:15px;
 }
-
-.container{
-max-width:500px;
-margin:auto;
-padding-bottom:80px;
-}
-
-.header{
-background:linear-gradient(135deg,#111827,#1f2937);
-padding:25px;
-border-radius:25px;
-color:white;
-margin-bottom:20px;
-}
-
-.header h1{
-font-size:28px;
-margin-bottom:5px;
-}
-
-.header p{
-color:#d1d5db;
-font-size:14px;
-}
-
 .card{
 background:white;
 padding:20px;
-border-radius:22px;
+border-radius:20px;
 margin-bottom:20px;
-box-shadow:0 5px 15px rgba(0,0,0,0.08);
 }
-
-.card h2{
-margin-bottom:15px;
-color:#111827;
-}
-
-input,select{
+input,select,button{
 width:100%;
 padding:15px;
-border-radius:14px;
-border:1px solid #d1d5db;
-margin-bottom:12px;
-font-size:15px;
-background:#f9fafb;
+margin-top:10px;
+border-radius:12px;
+border:1px solid #ccc;
 }
-
 button{
-width:100%;
-padding:15px;
-border:none;
-border-radius:14px;
-font-size:16px;
-font-weight:bold;
-cursor:pointer;
-}
-
-.add-btn{
 background:#2563eb;
 color:white;
+border:none;
+font-weight:bold;
 }
-
-.come-btn{
-background:#16a34a;
-color:white;
-margin-top:12px;
-}
-
-.delete-btn{
-background:#dc2626;
-color:white;
-margin-top:10px;
-}
-
-.staff-list{
-display:flex;
-flex-direction:column;
-gap:15px;
-}
-
-.staff-card{
+.staff{
 background:#f9fafb;
-padding:16px;
-border-radius:18px;
-border-left:6px solid #2563eb;
+padding:15px;
+border-radius:15px;
+margin-top:15px;
 }
-
-.staff-card h3{
-margin-bottom:8px;
-color:#111827;
-}
-
-.staff-card p{
-margin-bottom:5px;
-font-size:14px;
-color:#4b5563;
-}
-
-.salary-box{
-margin-top:12px;
-background:#ecfdf5;
-padding:12px;
-border-radius:12px;
-color:#065f46;
+.code{
+font-size:30px;
 font-weight:bold;
-}
-
-.status{
+color:#16a34a;
 margin-top:10px;
-padding:10px;
-border-radius:10px;
-font-weight:bold;
-text-align:center;
 }
-
-.early{
-background:#dcfce7;
-color:#166534;
-}
-
-.late{
-background:#fee2e2;
-color:#991b1b;
-}
-
-.ontime{
-background:#e0f2fe;
-color:#075985;
-}
-
 </style>
 </head>
 <body>
 
-<div class="container">
-
-<div class="header">
-
-<h1>Salon Staff System</h1>
-
-<p>Realtime Attendance & Salary</p>
-
+<div class="card">
+<h2>Salon Admin Panel</h2>
+<p id="liveTime"></p>
+<button onclick="setSalonLocation()">Set Salon Location</button>
+<p id="locationStatus"></p>
 </div>
 
-<!-- ADD STAFF -->
-
 <div class="card">
-
 <h2>Add Staff</h2>
-
 <input type="text" id="name" placeholder="Staff Name">
-
 <input type="number" id="salary" placeholder="Monthly Salary">
-
 <input type="text" id="time" placeholder="Example: 9:00">
-
 <select id="ampm">
-<option value="AM">AM</option>
-<option value="PM">PM</option>
+<option>AM</option>
+<option>PM</option>
 </select>
-
 <select id="holiday">
-<option value="Sunday">Sunday Holiday</option>
-<option value="Monday">Monday Holiday</option>
-<option value="Tuesday">Tuesday Holiday</option>
-<option value="Wednesday">Wednesday Holiday</option>
-<option value="Thursday">Thursday Holiday</option>
-<option value="Friday">Friday Holiday</option>
-<option value="Saturday">Saturday Holiday</option>
+<option>Sunday</option>
+<option>Monday</option>
+<option>Tuesday</option>
+<option>Wednesday</option>
+<option>Thursday</option>
+<option>Friday</option>
+<option>Saturday</option>
 </select>
-
-<button class="add-btn" onclick="addStaff()">
-Add Staff
-</button>
-
+<button onclick="addStaff()">Add Staff</button>
 </div>
-
-<!-- STAFF LIST -->
 
 <div class="card">
-
 <h2>All Staff</h2>
-
-<div class="staff-list" id="staffList"></div>
-
-</div>
-
+<div id="staffList"></div>
 </div>
 
 <script>
 
 const firebaseConfig = {
-
 apiKey: "AIzaSyBwkeBZilmVGP_kwlrgq9EknQkBKJd4EjY",
-
 authDomain: "staff-managemant-db65c.firebaseapp.com",
-
 projectId: "staff-managemant-db65c",
-
 storageBucket: "staff-managemant-db65c.firebasestorage.app",
-
 messagingSenderId: "46075713632",
-
-appId: "1:46075713632:web:8af66a96598fae1c5b0b05",
-
-measurementId: "G-R4XZ85FR3M"
-
+appId: "1:46075713632:web:8af66a96598fae1c5b0b05"
 };
 
 firebase.initializeApp(firebaseConfig);
-
 const db = firebase.firestore();
 
+setInterval(()=>{
+document.getElementById('liveTime').innerHTML =
+new Date().toLocaleString();
+},1000);
 
-// ADD STAFF
+async function setSalonLocation(){
+
+if(!navigator.geolocation){
+alert('GPS not supported');
+return;
+}
+
+navigator.geolocation.getCurrentPosition(async(pos)=>{
+
+const lat = pos.coords.latitude;
+const lng = pos.coords.longitude;
+
+await db.collection('settings').doc('salon').set({
+lat:lat,
+lng:lng
+});
+
+document.getElementById('locationStatus').innerHTML =
+'Salon Location Saved';
+
+},()=>{
+alert('Please Turn On Location');
+});
+
+}
 
 async function addStaff(){
 
-const name =
-document.getElementById("name").value.trim();
+const name = document.getElementById('name').value;
+const salary = document.getElementById('salary').value;
+const time = document.getElementById('time').value;
+const ampm = document.getElementById('ampm').value;
+const holiday = document.getElementById('holiday').value;
 
-const salary =
-document.getElementById("salary").value.trim();
-
-const time =
-document.getElementById("time").value.trim();
-
-const ampm =
-document.getElementById("ampm").value;
-
-const holiday =
-document.getElementById("holiday").value;
-
-if(name === "" || salary === "" || time === ""){
-
-alert("Please fill all fields");
-
+if(name==''||salary==''||time==''){
+alert('Fill all fields');
 return;
-
 }
 
-try{
-
-await db.collection("staff").add({
-
-name:name,
-
+await db.collection('staff').add({
+name,
 salary:parseInt(salary),
-
-shiftTime:time,
-
-ampm:ampm,
-
-holiday:holiday,
-
-totalBonus:0,
-
-totalPenalty:0,
-
+time,
+ampm,
+holiday,
 finalSalary:parseInt(salary),
-
-todayStatus:"Not Marked",
-
-createdAt:
-firebase.firestore.FieldValue.serverTimestamp()
-
+bonus:0,
+penalty:0,
+code:'',
+codeExpiry:0,
+status:'Not Marked',
+lastTime:'-'
 });
 
-alert("Staff Added Successfully");
-
-document.getElementById("name").value = "";
-document.getElementById("salary").value = "";
-document.getElementById("time").value = "";
+alert('Staff Added');
 
 }
 
-catch(error){
-
-alert(error.message);
-
+function generateCode(){
+return Math.floor(1000 + Math.random()*9000).toString();
 }
 
-}
+async function createAttendanceCode(id){
 
+const code = generateCode();
+const expiry = Date.now() + 30000;
 
-// COME IN SALON
-
-async function comeInSalon(staffId){
-
-const now = new Date();
-
-const today =
-now.toLocaleDateString();
-
-const attendanceCheck =
-await db.collection("attendance")
-.where("staffId","==",staffId)
-.where("date","==",today)
-.get();
-
-if(!attendanceCheck.empty){
-
-alert("Attendance Already Marked");
-
-return;
-
-}
-
-const staffDoc =
-await db.collection("staff")
-.doc(staffId)
-.get();
-
-const staff = staffDoc.data();
-
-const currentDay =
-now.toLocaleDateString('en-US',{weekday:'long'});
-
-if(currentDay === staff.holiday){
-
-alert("Today is Holiday");
-
-return;
-
-}
-
-let currentHour = now.getHours();
-
-let currentMinute = now.getMinutes();
-
-let shift =
-staff.shiftTime.split(":");
-
-let shiftHour =
-parseInt(shift[0]);
-
-let shiftMinute =
-parseInt(shift[1]);
-
-if(
-staff.ampm === "PM" &&
-shiftHour < 12
-){
-
-shiftHour += 12;
-
-}
-
-let status = "On Time";
-
-let bonus = 0;
-
-let penalty = 0;
-
-
-// EARLY
-
-if(currentHour < shiftHour){
-
-status = "Early";
-
-bonus = 20;
-
-}
-
-
-// LATE
-
-if(
-currentHour > shiftHour ||
-
-(
-currentHour === shiftHour &&
-currentMinute > shiftMinute + 10
-)
-
-){
-
-status = "Late";
-
-penalty = 20;
-
-}
-
-
-// FINAL SALARY
-
-let finalSalary =
-
-parseInt(
-staff.finalSalary ||
-staff.salary
-)
-
-+ bonus
-
-- penalty;
-
-
-// SAVE ATTENDANCE
-
-await db.collection("attendance").add({
-
-staffId:staffId,
-
-staffName:staff.name,
-
-status:status,
-
-bonus:bonus,
-
-penalty:penalty,
-
-date:today,
-
-time:
-now.toLocaleTimeString(),
-
-createdAt:
-firebase.firestore.FieldValue.serverTimestamp()
-
+await db.collection('staff').doc(id).update({
+code:code,
+codeExpiry:expiry
 });
 
-
-// UPDATE STAFF
-
-await db.collection("staff")
-.doc(staffId)
-.update({
-
-totalBonus:
-(staff.totalBonus || 0)
-+ bonus,
-
-totalPenalty:
-(staff.totalPenalty || 0)
-+ penalty,
-
-finalSalary:finalSalary,
-
-todayStatus:status
-
-});
-
-alert(
-"Attendance Success\n\n" +
-"Status: " + status
-);
+alert('Code: '+code);
 
 }
-
-
-// DELETE STAFF
 
 async function deleteStaff(id){
-
-const confirmDelete =
-confirm("Delete Staff?");
-
-if(!confirmDelete) return;
-
-await db.collection("staff")
-.doc(id)
-.delete();
-
-alert("Staff Deleted");
-
+await db.collection('staff').doc(id).delete();
 }
 
 
-// LOAD STAFF
+db.collection('staff').onSnapshot((snapshot)=>{
 
-db.collection("staff")
-.orderBy("createdAt","desc")
-.onSnapshot((snapshot)=>{
-
-const staffList =
-document.getElementById("staffList");
-
-staffList.innerHTML = "";
+const box = document.getElementById('staffList');
+box.innerHTML='';
 
 snapshot.forEach((doc)=>{
 
-const staff = doc.data();
+const s = doc.data();
 
-let statusClass = "ontime";
-
-if(staff.todayStatus === "Early"){
-statusClass = "early";
-}
-
-if(staff.todayStatus === "Late"){
-statusClass = "late";
-}
-
-staffList.innerHTML += `
-
-<div class="staff-card">
-
-<h3>${staff.name}</h3>
-
-<p>
-<b>Salary:</b>
-₹${staff.salary}
-</p>
-
-<p>
-<b>Shift:</b>
-${staff.shiftTime}
-${staff.ampm}
-</p>
-
-<p>
-<b>Holiday:</b>
-${staff.holiday}
-</p>
-
-<p>
-<b>Bonus:</b>
-₹${staff.totalBonus || 0}
-</p>
-
-<p>
-<b>Penalty:</b>
-₹${staff.totalPenalty || 0}
-</p>
-
-<div class="salary-box">
-
-Final Salary:
-₹${staff.finalSalary}
-
+box.innerHTML += `
+<div class="staff">
+<h3>${s.name}</h3>
+<p>Salary: ₹${s.salary}</p>
+<p>Final Salary: ₹${s.finalSalary}</p>
+<p>Shift: ${s.time} ${s.ampm}</p>
+<p>Holiday: ${s.holiday}</p>
+<p>Status: ${s.status}</p>
+<p>Last Time: ${s.lastTime}</p>
+<p>Bonus: ₹${s.bonus}</p>
+<p>Penalty: ₹${s.penalty}</p>
+<div class="code">${s.code}</div>
+<button onclick="createAttendanceCode('${doc.id}')">Generate Code</button>
+<button onclick="deleteStaff('${doc.id}')">Delete Staff</button>
 </div>
-
-<div class="status ${statusClass}">
-
-${staff.todayStatus}
-
-</div>
-
-<button
-class="come-btn"
-onclick="comeInSalon('${doc.id}')"
->
-
-Come In Salon
-
-</button>
-
-<button
-class="delete-btn"
-onclick="deleteStaff('${doc.id}')"
->
-
-Delete Staff
-
-</button>
-
-</div>
-
 `;
 
-})
+});
 
-})
+});
 
 </script>
-
 </body>
 </html>
+```
+
+---
+
+# staff.html (Staff App)
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Staff App</title>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<style>
+body{
+font-family:Arial;
+background:#f3f4f6;
+padding:15px;
+}
+.card{
+background:white;
+padding:20px;
+border-radius:20px;
+margin-bottom:20px;
+}
+input,button{
+width:100%;
+padding:15px;
+margin-top:10px;
+border-radius:12px;
+border:1px solid #ccc;
+}
+button{
+background:#16a34a;
+color:white;
+border:none;
+font-weight:bold;
+}
+.staff{
+background:#f9fafb;
+padding:15px;
+border-radius:15px;
+margin-top:15px;
+}
+</style>
+</head>
+<body>
+
+<div class="card">
+<h2>Staff Attendance</h2>
+<p>Select your name and enter admin code.</p>
+</div>
+
+<div id="staffList"></div>
+
+<script>
+
+const firebaseConfig = {
+apiKey: "AIzaSyBwkeBZilmVGP_kwlrgq9EknQkBKJd4EjY",
+authDomain: "staff-managemant-db65c.firebaseapp.com",
+projectId: "staff-managemant-db65c",
+storageBucket: "staff-managemant-db65c.firebasestorage.app",
+messagingSenderId: "46075713632",
+appId: "1:46075713632:web:8af66a96598fae1c5b0b05"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+function distance(lat1, lon1, lat2, lon2){
+const R = 6371e3;
+const p1 = lat1 * Math.PI/180;
+const p2 = lat2 * Math.PI/180;
+const dp = (lat2-lat1) * Math.PI/180;
+const dl = (lon2-lon1) * Math.PI/180;
+const a = Math.sin(dp/2)*Math.sin(dp/2)+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)*Math.sin(dl/2);
+const c = 2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+return R*c;
+}
+
+async function verifyAttendance(id){
+
+const enteredCode = document.getElementById('code-'+id).value;
+
+if(!navigator.geolocation){
+alert('GPS not supported');
+return;
+}
+
+navigator.geolocation.getCurrentPosition(async(pos)=>{
+
+const userLat = pos.coords.latitude;
+const userLng = pos.coords.longitude;
+
+const salonDoc = await db.collection('settings').doc('salon').get();
+const salon = salonDoc.data();
+
+const meter = distance(userLat,userLng,salon.lat,salon.lng);
+
+if(meter > 50){
+alert('You are not inside salon');
+return;
+}
+
+const staffDoc = await db.collection('staff').doc(id).get();
+const staff = staffDoc.data();
+
+if(Date.now() > staff.codeExpiry){
+alert('Code Expired');
+return;
+}
+
+if(enteredCode !== staff.code){
+alert('Wrong Code');
+return;
+}
+
+const now = new Date();
+
+let status = 'On Time';
+let bonus = 0;
+let penalty = 0;
+
+let currentHour = now.getHours();
+
+let shift = staff.time.split(':');
+let shiftHour = parseInt(shift[0]);
+
+if(staff.ampm==='PM' && shiftHour<12){
+shiftHour += 12;
+}
+
+if(currentHour < shiftHour){
+status='Early';
+bonus=20;
+}
+
+if(currentHour > shiftHour){
+status='Late';
+penalty=20;
+}
+
+const finalSalary =
+staff.finalSalary + bonus - penalty;
+
+await db.collection('attendance').add({
+name:staff.name,
+time:now.toLocaleString(),
+status,
+bonus,
+penalty
+});
+
+await db.collection('staff').doc(id).update({
+status,
+bonus:(staff.bonus||0)+bonus,
+penalty:(staff.penalty||0)+penalty,
+finalSalary,
+lastTime:now.toLocaleString(),
+code:'',
+codeExpiry:0
+});
+
+alert('Attendance Verified');
+
+},()=>{
+alert('Please Turn On Location');
+});
+
+}
+
+
+db.collection('staff').onSnapshot((snapshot)=>{
+
+const box = document.getElementById('staffList');
+box.innerHTML='';
+
+snapshot.forEach((doc)=>{
+
+const s = doc.data();
+
+box.innerHTML += `
+<div class="staff">
+<h3>${s.name}</h3>
+<p>Salary: ₹${s.finalSalary}</p>
+<p>Status: ${s.status}</p>
+<input type="number" id="code-${doc.id}" placeholder="Enter 4 Digit Code">
+<button onclick="verifyAttendance('${doc.id}')">Verify Attendance</button>
+</div>
+`;
+
+});
+
+});
+
+</script>
+</body>
+</html>
+```
