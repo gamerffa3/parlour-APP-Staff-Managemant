@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Salon Admin Panel</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Salon Staff Management</title>
 
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -35,7 +35,6 @@
       padding:25px;
       border-radius:22px;
       margin-bottom:20px;
-      box-shadow:0 5px 15px rgba(0,0,0,0.1);
     }
 
     .header h1{
@@ -133,9 +132,9 @@
 
   <div class="header">
 
-    <h1>Salon Admin</h1>
+    <h1>Salon Staff System</h1>
 
-    <p>Staff Attendance & Salary Management</p>
+    <p>Attendance & Salary Management</p>
 
   </div>
 
@@ -149,7 +148,7 @@
 
     <input type="number" id="salary" placeholder="Monthly Salary">
 
-    <input type="time" id="time">
+    <input type="text" id="time" placeholder="Example: 9:00">
 
     <select id="ampm">
       <option value="AM">AM</option>
@@ -212,19 +211,30 @@
 
   // ADD STAFF
 
-  function addStaff(){
+  async function addStaff(){
 
-    const name = document.getElementById("name").value;
+    const name =
+    document.getElementById("name").value;
 
-    const salary = document.getElementById("salary").value;
+    const salary =
+    document.getElementById("salary").value;
 
-    const time = document.getElementById("time").value;
+    const time =
+    document.getElementById("time").value;
 
-    const ampm = document.getElementById("ampm").value;
+    const ampm =
+    document.getElementById("ampm").value;
 
-    const holiday = document.getElementById("holiday").value;
+    const holiday =
+    document.getElementById("holiday").value;
 
-    if(!name || !salary || !time){
+    // VALIDATION
+
+    if(
+      name.trim() === "" ||
+      salary.trim() === "" ||
+      time.trim() === ""
+    ){
 
       alert("Please fill all fields");
 
@@ -232,30 +242,30 @@
 
     }
 
-    db.collection("staff").add({
+    try{
 
-      name:name,
+      await db.collection("staff").add({
 
-      salary:parseInt(salary),
+        name:name,
 
-      shiftTime:time,
+        salary:parseInt(salary),
 
-      ampm:ampm,
+        shiftTime:time,
 
-      holiday:holiday,
+        ampm:ampm,
 
-      totalBonus:0,
+        holiday:holiday,
 
-      totalPenalty:0,
+        totalBonus:0,
 
-      finalSalary:parseInt(salary),
+        totalPenalty:0,
 
-      createdAt:
-      firebase.firestore.FieldValue.serverTimestamp()
+        finalSalary:parseInt(salary),
 
-    })
+        createdAt:
+        firebase.firestore.FieldValue.serverTimestamp()
 
-    .then(()=>{
+      });
 
       alert("Staff Added Successfully");
 
@@ -265,7 +275,13 @@
 
       document.getElementById("time").value = "";
 
-    })
+    }
+
+    catch(error){
+
+      alert(error.message);
+
+    }
 
   }
 
@@ -275,12 +291,13 @@
 
     const now = new Date();
 
-    const today = now.toLocaleDateString();
+    const today =
+    now.toLocaleDateString();
 
     // CHECK ATTENDANCE
 
-    const attendanceRef = await db
-    .collection("attendance")
+    const attendanceRef =
+    await db.collection("attendance")
     .where("staffId","==",staffId)
     .where("date","==",today)
     .get();
@@ -293,28 +310,38 @@
 
     }
 
-    // GET STAFF DATA
+    // GET STAFF
 
-    const staffDoc = await db
-    .collection("staff")
+    const staffDoc =
+    await db.collection("staff")
     .doc(staffId)
     .get();
 
     const staff = staffDoc.data();
 
-    let currentHour = now.getHours();
+    let currentHour =
+    now.getHours();
 
-    let currentMinute = now.getMinutes();
+    let currentMinute =
+    now.getMinutes();
 
     // SHIFT TIME
 
-    let shift = staff.shiftTime.split(":");
+    let shift =
+    staff.shiftTime.split(":");
 
-    let shiftHour = parseInt(shift[0]);
+    let shiftHour =
+    parseInt(shift[0]);
 
-    let shiftMinute = parseInt(shift[1]);
+    let shiftMinute =
+    parseInt(shift[1]);
 
-    if(staff.ampm === "PM" && shiftHour < 12){
+    // PM CONVERT
+
+    if(
+      staff.ampm === "PM" &&
+      shiftHour < 12
+    ){
 
       shiftHour += 12;
 
@@ -357,8 +384,14 @@
     // FINAL SALARY
 
     let finalSalary =
-      parseInt(staff.finalSalary || staff.salary)
+
+      parseInt(
+        staff.finalSalary ||
+        staff.salary
+      )
+
       + bonus
+
       - penalty;
 
     // SAVE ATTENDANCE
@@ -389,10 +422,12 @@
     .update({
 
       totalBonus:
-      (staff.totalBonus || 0) + bonus,
+      (staff.totalBonus || 0)
+      + bonus,
 
       totalPenalty:
-      (staff.totalPenalty || 0) + penalty,
+      (staff.totalPenalty || 0)
+      + penalty,
 
       finalSalary:finalSalary
 
@@ -405,9 +440,10 @@
 
   }
 
-  // REALTIME STAFF LOAD
+  // LOAD STAFF REALTIME
 
-  db.collection("staff").onSnapshot((snapshot)=>{
+  db.collection("staff")
+  .onSnapshot((snapshot)=>{
 
     const staffList =
     document.getElementById("staffList");
@@ -425,13 +461,14 @@
           <h3>${staff.name}</h3>
 
           <p>
-            <b>Monthly Salary:</b>
+            <b>Salary:</b>
             ₹${staff.salary}
           </p>
 
           <p>
-            <b>Shift Time:</b>
-            ${staff.shiftTime} ${staff.ampm}
+            <b>Shift:</b>
+            ${staff.shiftTime}
+            ${staff.ampm}
           </p>
 
           <p>
